@@ -2,8 +2,8 @@
 FROM node:21 AS build
 WORKDIR /app
 COPY react-app/package*.json ./
+RUN npm ci
 COPY react-app/. .
-RUN npm install
 RUN npm run build
 
 # Stage 2 - Serving the App via Nginx
