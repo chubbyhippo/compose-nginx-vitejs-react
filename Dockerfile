@@ -1,18 +1,29 @@
-# Stage 1 - Building the App
-FROM node:21 AS build
+# Start from the Node.js LTS image
+FROM node:21 AS build-stage
+
+# Set the working directory
 WORKDIR /app
+
+# Copy package.json and package-lock.json
 COPY react-app/package*.json ./
-RUN npm ci
+
+# Install any dependencies
+RUN npm install
+
+# Copy local files to the app directory
 COPY react-app/. .
+
+# Build the app for production
 RUN npm run build
 
-# Stage 2 - Serving the App via Nginx
-FROM nginx:alpine
-# Remove default Nginx website
-RUN rm -rf /usr/share/nginx/html/*
-# Copy built app to Nginx server directory
-COPY --from=build /app/dist /usr/share/nginx/html
-# Copy the Nginx configuration file
-COPY nginx/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 8080
+# Production stage
+FROM nginx:stable-alpine AS production-stage
+
+# Copy built app to nginx serve directory
+COPY --from=build-stage /app/dist /usr/share/nginx/html
+
+# Expose port 80 to outside world
+EXPOSE 80
+
+# Start nginx with global directives and daemon off
 CMD ["nginx", "-g", "daemon off;"]
